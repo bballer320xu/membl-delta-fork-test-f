@@ -1,0 +1,17 @@
+name: probe
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: membl-delta
+    timeout-minutes: 5
+    steps:
+      - name: What this job sees
+        run: |
+          D="${MEMBL_DELTA_DIR:-$HOME/.membl-delta}"
+          echo "event=$GITHUB_EVENT_NAME delta dir entries: $(ls -A "$D" 2>/dev/null | wc -l)"
+          source /opt/hooks/delta.sh 2>/dev/null && { delta_active && echo "delta active" || echo "delta not active"; res=$(delta_call /v1/delta/resolve || true); echo "resolve: mode=$(jq -r '.mode // "none"' <<<"$res" 2>/dev/null) reason=$(jq -r '.reason // ""' <<<"$res" 2>/dev/null)"; res=$(delta_call /v1/delta/publish || true); echo "publish: mode=$(jq -r '.mode // "none"' <<<"$res" 2>/dev/null) reason=$(jq -r '.reason // ""' <<<"$res" 2>/dev/null)"; }
