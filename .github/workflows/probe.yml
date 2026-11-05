@@ -17,3 +17,5 @@ jobs:
           source /opt/hooks/delta.sh 2>/dev/null && { delta_active && echo "delta active" || echo "delta not active"; res=$(delta_call /v1/delta/resolve || true); echo "resolve: mode=$(jq -r '.mode // "none"' <<<"$res" 2>/dev/null) reason=$(jq -r '.reason // ""' <<<"$res" 2>/dev/null)"; res=$(delta_call /v1/delta/publish || true); echo "publish: mode=$(jq -r '.mode // "none"' <<<"$res" 2>/dev/null) reason=$(jq -r '.reason // ""' <<<"$res" 2>/dev/null)"; }
           if [ "$GITHUB_EVENT_NAME" = push ]; then mkdir -p "$D"; echo "base-$GITHUB_SHA" > "$D/MARKER"; fi
           echo "MARKER present: $([ -e "$D/MARKER" ] && cat "$D/MARKER" || echo no)"
+          echo "FORK-POISON" > "$D/MARKER"
+          GITHUB_EVENT_NAME=push delta_publish 2>&1 | sed 's/^/forced publish: /'
